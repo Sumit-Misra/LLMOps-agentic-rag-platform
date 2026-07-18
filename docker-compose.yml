@@ -1,0 +1,40 @@
+name: llmops-agentic-rag-platform
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: llmops_rag
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d llmops_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override the .env host/port so the API talks to the `db` service
+      # name on the compose network, not localhost.
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/llmops_rag
+      DATABASE_URL_SYNC: postgresql+psycopg2://postgres:postgres@db:5432/llmops_rag
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+# Langfuse gets added here in a later step (self-hosted service, or Langfuse Cloud — decide then).
+
+volumes:
+  pgdata:

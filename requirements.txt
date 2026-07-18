@@ -1,0 +1,38 @@
+# --- Web API ---
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pydantic-settings>=2.6
+
+# --- Agent orchestration ---
+langgraph>=0.2.60
+langgraph-checkpoint-postgres>=2.0
+psycopg[binary]>=3.1
+langchain>=0.3.7
+langchain-openai>=0.2.9
+langchain-community>=0.3.7
+openai>=1.54
+
+# --- Database / vector store ---
+sqlalchemy>=2.0.36
+asyncpg>=0.30
+psycopg2-binary>=2.9.10
+pgvector>=0.3.6
+alembic>=1.14
+
+# --- Observability ---
+langfuse>=2.53
+
+# --- Evaluation ---
+ragas>=0.2.6
+datasets>=3.1
+
+# --- Data processing (ingestion) ---
+pandas>=2.2
+requests>=2.32
+beautifulsoup4>=4.12
+tiktoken>=0.8
+
+# --- Utilities ---
+python-dotenv>=1.0
+tenacity>=9.0

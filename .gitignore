@@ -1,0 +1,38 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtual env ---
+.venv/
+venv/
+env/
+
+# --- Env / secrets ---
+.env
+*.env.local
+
+# --- Data (cloud_docs and postmortems ARE committed -- small,
+# deterministic, and it means CI doesn't depend on re-fetching from
+# GitHub every run. Only truly derived/regenerable output is ignored.)
+data/processed/*
+!data/processed/.gitkeep
+
+# --- Eval output (regenerated on every run) ---
+eval/eval_results.json
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# --- IDE ---
+.vscode/
+.idea/
+
+# --- OS ---
+.DS_Store

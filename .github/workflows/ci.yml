@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Unit tests
+        run: pytest -v
+
+  eval-gate:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: llmops_rag
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d llmops_rag"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/llmops_rag
+      DATABASE_URL_SYNC: postgresql+psycopg2://postgres:postgres@localhost:5432/llmops_rag
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_CHAT_MODEL: gpt-4.1-mini
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_HOST: https://cloud.langfuse.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+          pip install "psycopg[binary]>=3.1"
+
+      - name: Apply database migrations
+        run: alembic upgrade head
+
+      - name: Ingest corpus (chunk + embed + load pgvector)
+        run: python scripts/ingest.py
+
+      - name: Run eval gate against golden Q&A set
+        run: python eval/run_eval.py
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: eval/eval_results.json
