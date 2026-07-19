@@ -84,7 +84,7 @@ jobs:
         run: python scripts/ingest.py
 
       - name: Run eval gate against golden Q&A set
-        run: python eval/run_eval.py
+        run: python -u eval/run_eval.py
 
       - name: Upload eval results
         if: always()
