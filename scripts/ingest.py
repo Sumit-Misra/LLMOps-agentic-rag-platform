@@ -49,7 +49,7 @@ def main() -> None:
     with Session(engine) as session:
         session.execute(delete(DocumentChunk))
         for (source_type, source_name, source_url, idx, content), embedding in zip(
-            rows, embeddings
+            rows, embeddings, strict=True
         ):
             session.add(
                 DocumentChunk(
